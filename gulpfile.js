@@ -1,7 +1,6 @@
 const gulp = require('gulp')
 const inlinesource = require('gulp-inline-source')
 const htmlmin = require('gulp-htmlmin') // html压缩组件
-const gulpRemoveHtml = require('gulp-remove-html') // 标签清除，参考
 const removeEmptyLines = require('gulp-remove-empty-lines') // 清除空白行，参考
 const babel = require('gulp-babel') // 编译se6
 const uglify = require('gulp-uglify') // js文件压缩
@@ -226,7 +225,7 @@ gulp.task('html', function() {
     .src(files.srcHTML)
     .pipe(changed(paths.tmp))
     .pipe(
-      gulpif(isDev, gulpRemoveHtml(), // 清除特定标签
+      gulpif(isDev,
         removeEmptyLines({ removeComments: true })), // 清除空白行
       htmlmin(options))
     .pipe(gulp.dest(paths.tmp))
