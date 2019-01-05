@@ -1,0 +1,15 @@
+{
+  "extends": "standard",
+  "plugins": [
+    "html"
+  ],
+  "rules": {
+    "no-new": "off",
+    "camelcase": "off",
+    "no-return-assign": "off",
+    "space-before-function-paren": ["error", "never"],
+    "no-var": "error",
+    "no-fallthrough": "off",
+    "handle-callback-err": "off"
+  }
+}
