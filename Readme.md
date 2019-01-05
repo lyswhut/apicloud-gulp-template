@@ -68,7 +68,7 @@ git clone https://github.com/lyswhut/apicloud-gulp-template.git
 
 npm install
 
-# 检查gulp是否全局安装及版本
+# 检查gulp是否全局安装
 # gulp版本要求4.x
 # 若不符合要求请全局安装或更新到4.x
 gulp -v
