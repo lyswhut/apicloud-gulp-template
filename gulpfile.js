@@ -233,14 +233,20 @@ gulp.task('html', function() {
 
 gulp.task('build', gulp.series('clean:all', ['img', 'copyxml', 'copyres', 'csscompress', 'less', 'minifyjs'], ['html', 'pug'], 'inlinesource'))
 
+gulp.task('buildt', gulp.series(['img', 'copyxml', 'copyres', 'csscompress', 'less', 'minifyjs'], ['html', 'pug'], 'inlinesource'))
+
 gulp.task('copyfile', gulp.parallel('copycss', 'copyjs', 'copymap'))
 
 gulp.task('default', function() {
-  gulp.watch(files.srcJS, gulp.series('minifyjs', ['html', 'pug'], 'inlinesource'))
+  // gulp.watch(files.srcJS, gulp.series('minifyjs', ['html', 'pug'], 'inlinesource'))
+  gulp.watch(files.srcJS, gulp.series('minifyjs'))
   gulp.watch(files.srcHTML, gulp.series('html', 'inlinesource'))
   gulp.watch(paths.src + '/**/*.pug', gulp.series('pug', 'inlinesource'))
-  gulp.watch(paths.src + '/**/*.css', gulp.series('csscompress', ['html', 'pug'], 'inlinesource'))
-  gulp.watch(paths.src + '/**/*.less', gulp.series('less', ['html', 'pug'], 'inlinesource'))
+  // gulp.watch(paths.src + '/**/*.css', gulp.series('csscompress', ['html', 'pug'], 'inlinesource'))
+  // gulp.watch(paths.src + '/**/*.less', gulp.series('less', ['html', 'pug'], 'inlinesource'))
+  gulp.watch(paths.src + '/**/*.css', gulp.series('csscompress'))
+  gulp.watch(paths.src + '/**/*.less', gulp.series('less'))
+
   // gulp.watch(files.src + '/script/*.js', ['clean:js', 'minifyjs']);
   // gulp.watch(files.src + '/**/*.html', ['clean:html', 'html']);
   // gulp.watch(files.src + '/css/*.css', ['clean:css', 'csscompress']);
