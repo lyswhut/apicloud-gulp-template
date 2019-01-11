@@ -26,9 +26,9 @@ const paths = {
 }
 const files = {
   srcHTML: paths.src + '/**/*.html',
-  srcPug: [paths.src + '/**/*.pug', '!' + paths.src + '/layout/*'],
-  srcCSS: [paths.src + '/css/**/*.css', '!' + paths.src + '/common/*'],
-  srcLess: [paths.src + '/css/**/*.less', '!' + paths.src + '/common/*'],
+  srcPug: [paths.src + '/**/*.pug', '!' + paths.src + '/layout/**/*'],
+  srcCSS: [paths.src + '/css/**/*.css', '!' + paths.src + '/common/**/*'],
+  srcLess: [paths.src + '/css/**/*.less', '!' + paths.src + '/common/**/*'],
   srcJS: paths.src + '/script/**/*.js',
   srcImg: paths.src + '/image/**/*.{png,jpg,gif,ico}',
   srcRes: paths.src + '/res/*',
@@ -85,14 +85,14 @@ gulp.task('minifyjs', function() {
   return (
     gulp
       .src(files.srcJS)
-      .pipe(changed(paths.tmp + '/script'))
+      .pipe(changed((isDev ? paths.dist : paths.tmp) + '/script'))
       .pipe(babel({ presets: ['env'] })) // 编译se6
       .pipe(gulpif(!isDev, uglify({
         output: {
           // comments: 'some'
         }
       }))) // 压缩
-      .pipe(gulp.dest(paths.tmp + '/script'))
+      .pipe(gulp.dest((isDev ? paths.dist : paths.tmp) + '/script'))
   ) // 输出
 })
 
@@ -100,31 +100,32 @@ gulp.task('minifyjs', function() {
 gulp.task('csscompress', function() {
   return gulp
     .src(files.srcCSS)
-    .pipe(changed(paths.tmp + '/css'))
+    .pipe(changed((isDev ? paths.dist : paths.tmp) + '/css'))
     .pipe(gulpif(isDev, sourcemaps.init()))
     .pipe(postcss([ autoprefixer({ browsers: AUTOPREFIXER_BROWSERS }) ]))
     .pipe(gulpif(!isDev, csso())) // 压缩CSS文件
     .pipe(gulpif(isDev, sourcemaps.write('.')))
-    .pipe(gulp.dest(paths.tmp + '/css'))
+    .pipe(gulp.dest((isDev ? paths.dist : paths.tmp) + '/css'))
 })
 
 // 处理Less
 gulp.task('less', function() {
   return gulp
     .src(files.srcLess)
-    .pipe(changed(paths.tmp + '/css'))
+    .pipe(changed((isDev ? paths.dist : paths.tmp) + '/css'))
     .pipe(gulpif(isDev, sourcemaps.init()))
     .pipe(less()) // 压缩CSS文件
     .pipe(postcss([ autoprefixer({ browsers: AUTOPREFIXER_BROWSERS }) ]))
     .pipe(gulpif(!isDev, csso())) // 压缩CSS文件
     .pipe(gulpif(isDev, sourcemaps.write('.')))
-    .pipe(gulp.dest(paths.tmp + '/css'))
+    .pipe(gulp.dest((isDev ? paths.dist : paths.tmp) + '/css'))
 })
 
 // 压缩图片
 gulp.task('img', function() {
   return gulp
     .src(files.srcImg)
+    .pipe(changed(paths.dist + '/image'))
     .pipe(imagemin())
     .pipe(gulp.dest(paths.dist + '/image'))
 })
@@ -133,6 +134,7 @@ gulp.task('img', function() {
 gulp.task('copyimg', function() {
   return gulp
     .src(files.srcImg)
+    .pipe(changed(paths.dist + '/image'))
     .pipe(gulp.dest(paths.dist + '/image')) // 输出
 })
 
@@ -147,35 +149,36 @@ gulp.task('copyxml', function() {
 gulp.task('copycss', function() {
   return gulp
     .src(files.tmpCSS)
-    .pipe(changed(files.tmpCSS))
+    .pipe(changed(paths.dist))
     .pipe(gulp.dest(paths.dist)) // 输出
 })
 // 拷贝js文件
 gulp.task('copyjs', function() {
   return gulp
     .src(files.tmpJS)
-    .pipe(changed(files.tmpJS))
+    .pipe(changed(paths.dist))
     .pipe(gulp.dest(paths.dist)) // 输出
 })
 // 拷贝map文件
 gulp.task('copymap', function() {
   return gulp
     .src(files.tmpMap)
-    .pipe(changed(files.tmpMap))
+    .pipe(changed(paths.dist))
     .pipe(gulp.dest(paths.dist)) // 输出
 })
 // 拷贝res文件
 gulp.task('copyres', function() {
   return gulp
     .src(files.srcRes)
-    .pipe(changed(files.srcRes))
+    .pipe(changed(paths.dist))
     .pipe(gulp.dest(paths.dist)) // 输出
 })
 
 gulp.task('inlinesource', function() {
   let options = {
     attribute: false,
-    compress: false
+    compress: false,
+    ignore: [ 'img' ]
     // handlers: (source, context) => {
     //   if (source.fileContent && !source.content) {
     //     switch (source.type) {
@@ -192,8 +195,8 @@ gulp.task('inlinesource', function() {
   }
   return gulp
     .src(files.tmpHTML)
-    // .pipe(changed(paths.tmp))
-    .pipe(gulpif(!isDev, inlinesource(options)))
+    .pipe(changed(paths.dist))
+    .pipe(inlinesource(options))
     .pipe(gulp.dest(paths.dist))
 })
 
@@ -201,12 +204,12 @@ gulp.task('inlinesource', function() {
 gulp.task('pug', function() {
   return gulp
     .src(files.srcPug)
-    .pipe(changed(paths.tmp))
+    .pipe(changed(isDev ? paths.dist : paths.tmp))
     .pipe(pug({
       pretty: isDev
       // Your options in here.
     }))
-    .pipe(gulp.dest(paths.tmp))
+    .pipe(gulp.dest(isDev ? paths.dist : paths.tmp))
 })
 
 // 处理html
@@ -223,21 +226,21 @@ gulp.task('html', function() {
   }
   return gulp
     .src(files.srcHTML)
-    .pipe(changed(paths.tmp))
+    .pipe(changed(isDev ? paths.dist : paths.tmp))
     .pipe(
       gulpif(isDev,
         removeEmptyLines({ removeComments: true })), // 清除空白行
       htmlmin(options))
-    .pipe(gulp.dest(paths.tmp))
+    .pipe(gulp.dest(isDev ? paths.dist : paths.tmp))
 })
 
 gulp.task('build', gulp.series('clean:all', ['img', 'copyxml', 'copyres', 'csscompress', 'less', 'minifyjs'], ['html', 'pug'], 'inlinesource'))
 
-gulp.task('buildt', gulp.series(['img', 'copyxml', 'copyres', 'csscompress', 'less', 'minifyjs'], ['html', 'pug'], 'inlinesource'))
+gulp.task('buildt', gulp.series(['img', 'copyxml', 'copyres', 'csscompress', 'less', 'minifyjs', 'html', 'pug']))
 
 gulp.task('copyfile', gulp.parallel('copycss', 'copyjs', 'copymap'))
 
-gulp.task('default', function() {
+gulp.task('watch', function() {
   // gulp.watch(files.srcJS, gulp.series('minifyjs', ['html', 'pug'], 'inlinesource'))
   gulp.watch(files.srcJS, gulp.series('minifyjs'))
   gulp.watch(files.srcHTML, gulp.series('html', 'inlinesource'))
@@ -250,11 +253,11 @@ gulp.task('default', function() {
   // gulp.watch(files.src + '/script/*.js', ['clean:js', 'minifyjs']);
   // gulp.watch(files.src + '/**/*.html', ['clean:html', 'html']);
   // gulp.watch(files.src + '/css/*.css', ['clean:css', 'csscompress']);
-  if (isDev) {
-    gulp.watch(files.tmpJS, gulp.series('copyjs'))
-    gulp.watch(files.tmpCSS, gulp.series('copycss'))
-    gulp.watch(files.tmpMap, gulp.series('copymap'))
-  }
+  // if (isDev) {
+  //   gulp.watch(files.tmpJS, gulp.series('copyjs'))
+  //   gulp.watch(files.tmpCSS, gulp.series('copycss'))
+  //   gulp.watch(files.tmpMap, gulp.series('copymap'))
+  // }
 
   // gulp.watch(files.src + '/script/vendor/*.js', ['clean:vendorjs', 'copyjs']);
   gulp.watch(files.srcImg, gulp.series('img'))
@@ -262,3 +265,5 @@ gulp.task('default', function() {
   gulp.watch(files.src + '/config.xml', gulp.series('copyxml'))
   // gulp.watch(files.src + '/images/*.{png,jpg,gif,ico}', ['clean:js', 'testImagemin']);
 })
+
+gulp.task('default', gulp.series('buildt', 'watch'))
