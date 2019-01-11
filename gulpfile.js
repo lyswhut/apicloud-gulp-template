@@ -178,7 +178,7 @@ gulp.task('inlinesource', function() {
   let options = {
     attribute: false,
     compress: false,
-    ignore: [ 'img' ]
+    ignore: [ 'png', 'jpg', 'gif', 'ico' ]
     // handlers: (source, context) => {
     //   if (source.fileContent && !source.content) {
     //     switch (source.type) {
