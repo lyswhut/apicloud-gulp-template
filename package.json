@@ -6,6 +6,7 @@
   "scripts": {
     "build": "cross-env NODE_ENV=production gulp build",
     "dev": "cross-env NODE_ENV=development gulp",
+    "cv": "node createView",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
