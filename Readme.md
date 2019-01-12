@@ -88,6 +88,10 @@ npm run dev
 
 # 打包
 npm run build
+
+# 实用命令
+## 以main.pug为模板新建名为test.pug的文件及对应css及js文件
+npm run cv -- test main
 ```
 
 ## LICENSE
