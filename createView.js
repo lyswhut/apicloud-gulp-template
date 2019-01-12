@@ -42,13 +42,13 @@ const createHTML = (newFileName, templateName, templatePath) => {
 const createCSS = (newFileName, templateName) => {
   let filePath = jp(cssDir, `${templateName}.`)
   filePath = fs.existsSync(filePath + 'less') ? filePath + 'less' : fs.existsSync(filePath + 'css') ? filePath + 'css' : null
-  if (filePath) return fs.copyFileSync(filePath, filePath.replace(/(\/|\\)\w+(\.(less|css))/, `$1${newFileName}$2`), fs.constants.COPYFILE_EXCL)
+  if (filePath) return fs.copyFileSync(filePath, filePath.replace(/(\/|\\)[\w-.]+(\.(less|css))/, `$1${newFileName}$2`), fs.constants.COPYFILE_EXCL)
   console.log('找不到目标css文件：' + fileName)
   process.exit(0)
 }
 const createJS = (newFileName, templateName) => {
   let filePath = jp(jsDir, `${templateName}.js`)
-  if (fs.existsSync(filePath)) return fs.copyFileSync(filePath, filePath.replace(/(\/|\\)\w+(\.js)/, `$1${newFileName}$2`), fs.constants.COPYFILE_EXCL)
+  if (fs.existsSync(filePath)) return fs.copyFileSync(filePath, filePath.replace(/(\/|\\)[\w-.]+(\.js)/, `$1${newFileName}$2`), fs.constants.COPYFILE_EXCL)
   console.log('找不到目标js文件：' + filePath)
   process.exit(0)
 }
