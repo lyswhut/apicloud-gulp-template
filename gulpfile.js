@@ -30,7 +30,8 @@ const files = {
   srcCSS: [paths.src + '/css/**/*.css', '!' + paths.src + '/common/**/*'],
   srcLess: [paths.src + '/css/**/*.less', '!' + paths.src + '/common/**/*'],
   srcJS: paths.src + '/script/**/*.js',
-  srcImg: paths.src + '/image/**/*.{png,jpg,gif,ico}',
+  srcImg: paths.src + '/image/**/*.{png,jpg,gif,ico,svg}',
+  // srcSvg: paths.src + '/image/**/*.svg',
   srcRes: paths.src + '/res/*',
   tmpHTML: [paths.tmp + '/**/*.html'],
   tmpCSS: paths.tmp + '/**/*.css',
@@ -39,7 +40,7 @@ const files = {
   distHTML: paths.dist + '/**/*.html',
   distCSS: paths.dist + '/**/*.css',
   distJS: paths.dist + '/**/*.js',
-  distImg: paths.dist + '/image/*.{png,jpg,gif,ico}',
+  distImg: paths.dist + '/image/*.{png,jpg,gif,ico,svg}',
   distRes: paths.src + '/res/*'
 }
 
@@ -130,6 +131,13 @@ gulp.task('img', function() {
     .pipe(gulp.dest(paths.dist + '/image'))
 })
 
+// 拷贝svg
+// gulp.task('copysvg', function() {
+//   return gulp
+//     .src(files.srcSvg)
+//     .pipe(changed(paths.tmp + '/image'))
+//     .pipe(gulp.dest(paths.tmp + '/image')) // 输出
+// })
 // 拷贝image
 gulp.task('copyimg', function() {
   return gulp
@@ -178,7 +186,7 @@ gulp.task('inlinesource', function() {
   let options = {
     attribute: false,
     compress: false,
-    ignore: [ 'png', 'jpg', 'gif', 'ico' ]
+    ignore: [ 'img' ]
     // handlers: (source, context) => {
     //   if (source.fileContent && !source.content) {
     //     switch (source.type) {
