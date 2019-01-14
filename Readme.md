@@ -83,7 +83,7 @@ gulp -v
 
 然后把你的源代码放到src目录中对应的目录里。
 
-再打开 `gulpfile.js` 修改 `paths` 对象里的 `dist` 值为你的最终输出目录。
+再打开 `config.js` 修改 `paths` 对象里的 `dist` 值为你的最终输出目录。
 
 > 再说一遍，运行打包或开发命令时会删除 `dist` 下的 `html`、`css`、`script`、`image`、`res`文件夹！
 
