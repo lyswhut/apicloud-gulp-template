@@ -37,18 +37,28 @@ const createHTML = (newFileName, templateName, templatePath) => {
   // let r = /(link\([\w|=|"|'|,|.|/|\s]+\/)\w+(\.css["|']{1}\))/
   html = html.replace(new RegExp(`(link\\([\\w="',./\\s]+\\/)${templateName}(\\.css["']{1}\\))`), `$1${newFileName}$2`)
     .replace(new RegExp(`(script\\([\\w="',./\\s]+\\/)${templateName}(\\.js["']{1}\\))`), `$1${newFileName}$2`)
-  return fs.writeFileSync(jp('html', newFileName + /.(pug|html)$/.exec(templatePath)[0]), html)
+  const targetPath = jp('html', newFileName + path.extname(templatePath))
+  fs.writeFileSync(targetPath, html)
+  return targetPath
 }
 const createCSS = (newFileName, templateName) => {
   let filePath = jp(cssDir, `${templateName}.`)
   filePath = fs.existsSync(filePath + 'less') ? filePath + 'less' : fs.existsSync(filePath + 'css') ? filePath + 'css' : null
-  if (filePath) return fs.copyFileSync(filePath, filePath.replace(/(\/|\\)[\w-.]+(\.(less|css))/, `$1${newFileName}$2`), fs.constants.COPYFILE_EXCL)
+  if (filePath) {
+    const targetPath = path.join(path.dirname(filePath), newFileName + path.extname(filePath))
+    fs.copyFileSync(filePath, targetPath, fs.constants.COPYFILE_EXCL)
+    return targetPath
+  }
   console.log('找不到目标css文件：' + fileName)
   process.exit(0)
 }
 const createJS = (newFileName, templateName) => {
   let filePath = jp(jsDir, `${templateName}.js`)
-  if (fs.existsSync(filePath)) return fs.copyFileSync(filePath, filePath.replace(/(\/|\\)[\w-.]+(\.js)/, `$1${newFileName}$2`), fs.constants.COPYFILE_EXCL)
+  if (fs.existsSync(filePath)) {
+    const targetPath = path.join(path.dirname(filePath), newFileName + path.extname(filePath))
+    fs.copyFileSync(filePath, targetPath, fs.constants.COPYFILE_EXCL)
+    return targetPath
+  }
   console.log('找不到目标js文件：' + filePath)
   process.exit(0)
 }
@@ -60,9 +70,9 @@ if (!templatePath) {
 }
 
 try {
-  createHTML(fileName, templateName, templatePath)
-  createCSS(fileName, templateName)
-  createJS(fileName, templateName)
+  console.log('创建：', createHTML(fileName, templateName, templatePath))
+  console.log('创建：', createCSS(fileName, templateName))
+  console.log('创建：', createJS(fileName, templateName), '\n')
   console.log(fileName, '创建成功~')
 } catch (err) {
   console.log('发生错误：', err)

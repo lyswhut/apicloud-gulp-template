@@ -4,9 +4,13 @@
 
 为了方便开发 APICloud 应用，本脚手架提供了 `less`、`pug`、`ES6` 语法编译支持，同时集成了 `autoprefixer`。并且，在生产环境编译时，会自动把页面引用的所有 `css`、 `js` 以内联的方式注入到html页面中，从而提高APP的性能。
 
-在生产环境下，为了易于调试、支持`source map`(目前只配置了css的`source map`)，只会编译`less`及`ES6`语法，并且实时监视`src`目录下的文件变动并动态编译到目标目录，再配合 APICloud Studio 2 的WIFI自动同步功能，从而实现改完文件APP自动刷新。
+本脚手架集成了 APICloud 的wifi同步插件，处在开发模式时会实时监视`src`目录下的文件变动并动态编译到目标目录，然后执行WIFI同步功能，从而实现改完文件APP自动刷新。
+
+在开发环境下，为了易于调试、支持`source map`(目前只配置了css的`source map`)，只编译`less`及`ES6`语法并以文件链接的形式加载。
 
 推荐每个`html`文件都建立对应名称的`less`与`js`文件，打包时会自动把这些文件以内联的方式注入到`html`中。
+
+本脚手架提供了模板创建功能，用于自动创建`html`、`css`、`js`文件，具体请参考下面使用方法的**实用命令**！
 
 **注意：** `es6` 语法只能在js文件中使用，不能在html文件的内联script标签中使用！
 
@@ -24,6 +28,8 @@ apicloud-gulp-template
 │   │   └── loading_more.gif
 │   └── index.html
 ├── gulpfile.js
+├── config.js // 配置路径、apicloud wifi功能配置等
+├── createView.js
 ├── package-lock.json
 ├── package.json
 ├── Readme.md
@@ -31,6 +37,7 @@ apicloud-gulp-template
 │   ├── common // 公共css、less文件夹，不要在html中直接引用本文件夹的内容，本文件夹用于存放布局模板、mixin等代码，然后由css文件夹里的less文件用@import引入
 │   │   └── common.less
 │   ├── config.xml // app配置文件
+│   ├── .syncignore // wifi 同步忽略文件列表，把不需要同步的文件放到这里
 │   ├── css // css文件夹，在html引用less文件时，请把less扩展名改成css，如在index.html引用index.less的写法为src="./css/index.css"
 │   │   ├── api.css
 │   │   ├── index.less
@@ -91,6 +98,8 @@ npm run build
 
 # 实用命令
 ## 以main.pug为模板新建名为test.pug的文件及对应css及js文件
+## 会自动识别是.pug或.html文件，less/css也是
+## 若不传目标模板，将以 index 为目标模板
 npm run cv -- test main
 ```
 

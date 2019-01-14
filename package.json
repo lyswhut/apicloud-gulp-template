@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/lyswhut/apicloud-gulp-template#readme",
   "devDependencies": {
+    "apicloud-tools-core": "^0.1.0",
     "autoprefixer": "^9.4.4",
     "babel-core": "^6.26.3",
     "babel-preset-env": "^1.7.0",

@@ -17,13 +17,19 @@ const postcss = require('gulp-postcss')
 const sourcemaps = require('gulp-sourcemaps')
 const autoprefixer = require('autoprefixer')
 
+const APICloud = require('apicloud-tools-core')
+
 const isDev = process.env.NODE_ENV !== 'production'
 
-const paths = {
-  src: 'src',
-  tmp: 'tmp',
-  dist: 'dist'
-}
+const { paths, apicloudConfig } = require('./config')
+
+console.log(`=============================
+src path: ${path.isAbsolute(paths.src) ? paths.src : path.join(__dirname, paths.src)}
+tmp path: ${path.isAbsolute(paths.tmp) ? paths.tmp : path.join(__dirname, paths.tmp)}
+dist path: ${path.isAbsolute(paths.dist) ? paths.dist : path.join(__dirname, paths.dist)}
+=============================
+`)
+
 const files = {
   srcHTML: paths.src + '/**/*.html',
   srcPug: [paths.src + '/**/*.pug', '!' + paths.src + '/layout/**/*'],
@@ -152,6 +158,12 @@ gulp.task('copyxml', function() {
     .src(paths.src + '/config.xml')
     .pipe(gulp.dest(paths.dist)) // 输出
 })
+// 拷贝syncignore
+gulp.task('copysyncignore', function() {
+  return gulp
+    .src(paths.src + '/.syncignore')
+    .pipe(gulp.dest(paths.dist)) // 输出
+})
 
 // 拷贝css文件
 gulp.task('copycss', function() {
@@ -242,21 +254,67 @@ gulp.task('html', function() {
     .pipe(gulp.dest(isDev ? paths.dist : paths.tmp))
 })
 
-gulp.task('build', gulp.series('clean:all', ['img', 'copyxml', 'copyres', 'csscompress', 'less', 'minifyjs'], ['html', 'pug'], 'inlinesource'))
+gulp.task('asyncWIFI:all', cb => {
+  APICloud.syncWifi({ projectPath: paths.dist, syncAll: true })
+  cb()
+})
+gulp.task('asyncWIFI', cb => {
+  APICloud.syncWifi({ projectPath: paths.dist, syncAll: false })
+  cb()
+})
+gulp.task('stopWIFI', cb => {
+  APICloud.endWifi({})
+  cb()
+})
+gulp.task('startWIFI', cb => {
+  if (!isDev && !apicloudConfig.buildSync) {
+    console.log('跳过wifi同步')
+    cb()
+    return
+  }
+  APICloud.startWifi({ port: apicloudConfig.wifiPort })
+  APICloud.wifiLog(({ level, content }) => {
+    if (level === 'warn') {
+      console.warn(content)
+      return
+    }
+    if (level === 'error') {
+      console.error(content)
+      return
+    }
+    console.log(content)
+  }).then(() => {
+    console.log('WiFi 日志服务已启动...')
+  })
+  // console.log(APICloud.wifiInfo())
+  const timer = time => {
+    setTimeout(() => {
+      console.log(`将在 ${time} 秒后进行全量wifi同步！`)
+      if (--time > -1) return timer(time)
+      console.log(`全量wifi同步开始...`)
+      APICloud.syncWifi({ projectPath: paths.dist, syncAll: true })
+      console.log(isDev ? `全量wifi同步指令已执行！` : `全量wifi同步指令已执行，同步完毕后请按 ctrl+c 结束命令行！`)
+    }, 1000)
+  }
+  timer(apicloudConfig.syncTime)
+  cb()
+})
 
-gulp.task('buildt', gulp.series(['img', 'copyxml', 'copyres', 'csscompress', 'less', 'minifyjs', 'html', 'pug']))
+gulp.task('build', gulp.series('clean:all', ['img', 'copyxml', 'copysyncignore', 'copyres', 'csscompress', 'less', 'minifyjs'], ['html', 'pug'], 'inlinesource', 'startWIFI'))
+
+gulp.task('buildt', gulp.series(['img', 'copyxml', 'copysyncignore', 'copyres', 'csscompress', 'less', 'minifyjs', 'html', 'pug']))
 
 gulp.task('copyfile', gulp.parallel('copycss', 'copyjs', 'copymap'))
 
 gulp.task('watch', function() {
   // gulp.watch(files.srcJS, gulp.series('minifyjs', ['html', 'pug'], 'inlinesource'))
-  gulp.watch(files.srcJS, gulp.series('minifyjs'))
-  gulp.watch(files.srcHTML, gulp.series('html', 'inlinesource'))
-  gulp.watch(paths.src + '/**/*.pug', gulp.series('pug', 'inlinesource'))
+  gulp.watch(files.srcJS, gulp.series('minifyjs', 'asyncWIFI'))
+  gulp.watch(files.srcHTML, gulp.series('html', 'inlinesource', 'asyncWIFI'))
+  gulp.watch(paths.src + '/**/*.pug', gulp.series('pug', 'inlinesource', 'asyncWIFI'))
   // gulp.watch(paths.src + '/**/*.css', gulp.series('csscompress', ['html', 'pug'], 'inlinesource'))
   // gulp.watch(paths.src + '/**/*.less', gulp.series('less', ['html', 'pug'], 'inlinesource'))
-  gulp.watch(paths.src + '/**/*.css', gulp.series('csscompress'))
-  gulp.watch(paths.src + '/**/*.less', gulp.series('less'))
+  gulp.watch(paths.src + '/**/*.css', gulp.series('csscompress', 'asyncWIFI'))
+  gulp.watch(paths.src + '/**/*.less', gulp.series('less', 'asyncWIFI'))
 
   // gulp.watch(files.src + '/script/*.js', ['clean:js', 'minifyjs']);
   // gulp.watch(files.src + '/**/*.html', ['clean:html', 'html']);
@@ -268,10 +326,11 @@ gulp.task('watch', function() {
   // }
 
   // gulp.watch(files.src + '/script/vendor/*.js', ['clean:vendorjs', 'copyjs']);
-  gulp.watch(files.srcImg, gulp.series('img'))
-  gulp.watch(files.srcRes, gulp.series('copyres'))
-  gulp.watch(files.src + '/config.xml', gulp.series('copyxml'))
+  gulp.watch(files.srcImg, gulp.series('img', 'asyncWIFI'))
+  gulp.watch(files.srcRes, gulp.series('copyres', 'asyncWIFI'))
+  gulp.watch(files.src + '/config.xml', gulp.series('copyxml', 'asyncWIFI'))
+  gulp.watch(files.src + '/.syncignore', gulp.series('copysyncignore'))
   // gulp.watch(files.src + '/images/*.{png,jpg,gif,ico}', ['clean:js', 'testImagemin']);
 })
 
-gulp.task('default', gulp.series('buildt', 'watch'))
+gulp.task('default', gulp.series('buildt', 'startWIFI', 'watch'))
