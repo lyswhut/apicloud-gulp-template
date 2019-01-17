@@ -2,7 +2,7 @@
 
 ## 介绍
 
-为了方便开发 APICloud 应用，本脚手架提供了 `less`、`pug`、`ES6` 语法编译支持，同时集成了 `autoprefixer`。并且，在生产环境编译时，会自动把页面引用的所有 `css`、 `js` 以内联的方式注入到html页面中，从而提高APP的性能。
+为了方便开发 APICloud 应用，本脚手架提供了 `less`、`pug`、`ES6` 语法编译支持，同时集成了 `autoprefixer`。并且，在生产环境编译时，会自动把页面引用的所有 `css`、 `js` **压缩**并以**内联**的方式注入到html页面中，从而提高APP的性能。
 
 本脚手架集成了 APICloud 的wifi同步插件，处在开发模式时会实时监视`src`目录下的文件变动并动态编译到目标目录，然后执行WIFI同步功能，从而实现改完文件APP自动刷新。
 
@@ -75,10 +75,6 @@ git clone https://github.com/lyswhut/apicloud-gulp-template.git
 
 npm install
 
-# 检查gulp是否全局安装
-# gulp版本要求4.x
-# 若不符合要求请全局安装或更新到4.x
-gulp -v
 ```
 
 然后把你的源代码放到src目录中对应的目录里。
