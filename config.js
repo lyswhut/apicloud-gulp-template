@@ -3,8 +3,9 @@ module.exports = {
   paths: {
     src: 'src',
     tmp: 'tmp',
-    dist: 'dist'
-    // dist: 'F:\\APICloud\\workspace\\test'
+    devDist: 'dist', // 开发模式输出目录
+    prodDist: 'dist' // 生产(打包)模式输出目录
+    // prodDist: 'D:\\APICloud\\workspace\\bgs' // 生产(打包)模式输出目录
   },
 
   // apiCloud 配置

@@ -23,10 +23,12 @@ const isDev = process.env.NODE_ENV !== 'production'
 
 const { paths, apicloudConfig } = require('./config')
 
+const distPath = isDev ? paths.devDist : paths.prodDist
+
 console.log(`=============================
 src path: ${path.isAbsolute(paths.src) ? paths.src : path.join(__dirname, paths.src)}
 tmp path: ${path.isAbsolute(paths.tmp) ? paths.tmp : path.join(__dirname, paths.tmp)}
-dist path: ${path.isAbsolute(paths.dist) ? paths.dist : path.join(__dirname, paths.dist)}
+dist path: ${path.isAbsolute(distPath) ? distPath : path.join(__dirname, distPath)}
 =============================
 `)
 
@@ -43,10 +45,10 @@ const files = {
   tmpCSS: paths.tmp + '/**/*.css',
   tmpJS: paths.tmp + '/**/*.js',
   tmpMap: paths.tmp + '/**/*.map',
-  distHTML: paths.dist + '/**/*.html',
-  distCSS: paths.dist + '/**/*.css',
-  distJS: paths.dist + '/**/*.js',
-  distImg: paths.dist + '/image/*.{png,jpg,gif,ico,svg}',
+  distHTML: distPath + '/**/*.html',
+  distCSS: distPath + '/**/*.css',
+  distJS: distPath + '/**/*.js',
+  distImg: distPath + '/image/*.{png,jpg,gif,ico,svg}',
   distRes: paths.src + '/res/*'
 }
 
@@ -63,7 +65,7 @@ const AUTOPREFIXER_BROWSERS = [
 ]
 
 gulp.task('clean:all', function(cb) {
-  del([paths.tmp, path.join(paths.dist, '/html'), path.join(paths.dist, '/css'), path.join(paths.dist, '/script'), path.join(paths.dist, '/image'), path.join(paths.dist, '/res')], { force: true })
+  del([paths.tmp, path.join(distPath, '/html'), path.join(distPath, '/css'), path.join(distPath, '/script'), path.join(distPath, '/image'), path.join(distPath, '/res')], { force: true })
   cb()
 })
 gulp.task('clean:html', function(cb) {
@@ -92,14 +94,14 @@ gulp.task('minifyjs', function() {
   return (
     gulp
       .src(files.srcJS)
-      .pipe(changed((isDev ? paths.dist : paths.tmp) + '/script'))
+      .pipe(changed((isDev ? distPath : paths.tmp) + '/script'))
       .pipe(babel({ presets: ['env'] })) // 编译se6
       .pipe(gulpif(!isDev, uglify({
         output: {
           // comments: 'some'
         }
       }))) // 压缩
-      .pipe(gulp.dest((isDev ? paths.dist : paths.tmp) + '/script'))
+      .pipe(gulp.dest((isDev ? distPath : paths.tmp) + '/script'))
   ) // 输出
 })
 
@@ -107,34 +109,34 @@ gulp.task('minifyjs', function() {
 gulp.task('csscompress', function() {
   return gulp
     .src(files.srcCSS)
-    .pipe(changed((isDev ? paths.dist : paths.tmp) + '/css'))
+    .pipe(changed((isDev ? distPath : paths.tmp) + '/css'))
     .pipe(gulpif(isDev, sourcemaps.init()))
     .pipe(postcss([ autoprefixer({ browsers: AUTOPREFIXER_BROWSERS }) ]))
     .pipe(gulpif(!isDev, csso())) // 压缩CSS文件
     .pipe(gulpif(isDev, sourcemaps.write('.')))
-    .pipe(gulp.dest((isDev ? paths.dist : paths.tmp) + '/css'))
+    .pipe(gulp.dest((isDev ? distPath : paths.tmp) + '/css'))
 })
 
 // 处理Less
 gulp.task('less', function() {
   return gulp
     .src(files.srcLess)
-    .pipe(changed((isDev ? paths.dist : paths.tmp) + '/css'))
+    .pipe(changed((isDev ? distPath : paths.tmp) + '/css'))
     .pipe(gulpif(isDev, sourcemaps.init()))
     .pipe(less()) // 压缩CSS文件
     .pipe(postcss([ autoprefixer({ browsers: AUTOPREFIXER_BROWSERS }) ]))
     .pipe(gulpif(!isDev, csso())) // 压缩CSS文件
     .pipe(gulpif(isDev, sourcemaps.write('.')))
-    .pipe(gulp.dest((isDev ? paths.dist : paths.tmp) + '/css'))
+    .pipe(gulp.dest((isDev ? distPath : paths.tmp) + '/css'))
 })
 
 // 压缩图片
 gulp.task('img', function() {
   return gulp
     .src(files.srcImg)
-    .pipe(changed(paths.dist + '/image'))
+    .pipe(changed(distPath + '/image'))
     .pipe(imagemin())
-    .pipe(gulp.dest(paths.dist + '/image'))
+    .pipe(gulp.dest(distPath + '/image'))
 })
 
 // 拷贝svg
@@ -148,50 +150,50 @@ gulp.task('img', function() {
 gulp.task('copyimg', function() {
   return gulp
     .src(files.srcImg)
-    .pipe(changed(paths.dist + '/image'))
-    .pipe(gulp.dest(paths.dist + '/image')) // 输出
+    .pipe(changed(distPath + '/image'))
+    .pipe(gulp.dest(distPath + '/image')) // 输出
 })
 
 // 拷贝xml
 gulp.task('copyxml', function() {
   return gulp
     .src(paths.src + '/config.xml')
-    .pipe(gulp.dest(paths.dist)) // 输出
+    .pipe(gulp.dest(distPath)) // 输出
 })
 // 拷贝syncignore
 gulp.task('copysyncignore', function() {
   return gulp
     .src(paths.src + '/.syncignore')
-    .pipe(gulp.dest(paths.dist)) // 输出
+    .pipe(gulp.dest(distPath)) // 输出
 })
 
 // 拷贝css文件
 gulp.task('copycss', function() {
   return gulp
     .src(files.tmpCSS)
-    .pipe(changed(paths.dist))
-    .pipe(gulp.dest(paths.dist)) // 输出
+    .pipe(changed(distPath))
+    .pipe(gulp.dest(distPath)) // 输出
 })
 // 拷贝js文件
 gulp.task('copyjs', function() {
   return gulp
     .src(files.tmpJS)
-    .pipe(changed(paths.dist))
-    .pipe(gulp.dest(paths.dist)) // 输出
+    .pipe(changed(distPath))
+    .pipe(gulp.dest(distPath)) // 输出
 })
 // 拷贝map文件
 gulp.task('copymap', function() {
   return gulp
     .src(files.tmpMap)
-    .pipe(changed(paths.dist))
-    .pipe(gulp.dest(paths.dist)) // 输出
+    .pipe(changed(distPath))
+    .pipe(gulp.dest(distPath)) // 输出
 })
 // 拷贝res文件
 gulp.task('copyres', function() {
   return gulp
     .src(files.srcRes)
-    .pipe(changed(paths.dist))
-    .pipe(gulp.dest(paths.dist)) // 输出
+    .pipe(changed(distPath))
+    .pipe(gulp.dest(distPath)) // 输出
 })
 
 gulp.task('inlinesource', function() {
@@ -215,21 +217,21 @@ gulp.task('inlinesource', function() {
   }
   return gulp
     .src(files.tmpHTML)
-    .pipe(changed(paths.dist))
+    .pipe(changed(distPath))
     .pipe(inlinesource(options))
-    .pipe(gulp.dest(paths.dist))
+    .pipe(gulp.dest(distPath))
 })
 
 // 处理pug
 gulp.task('pug', function() {
   return gulp
     .src(files.srcPug)
-    .pipe(changed(isDev ? paths.dist : paths.tmp))
+    .pipe(changed(isDev ? distPath : paths.tmp))
     .pipe(pug({
       pretty: isDev
       // Your options in here.
     }))
-    .pipe(gulp.dest(isDev ? paths.dist : paths.tmp))
+    .pipe(gulp.dest(isDev ? distPath : paths.tmp))
 })
 
 // 处理html
@@ -246,20 +248,20 @@ gulp.task('html', function() {
   }
   return gulp
     .src(files.srcHTML)
-    .pipe(changed(isDev ? paths.dist : paths.tmp))
+    .pipe(changed(isDev ? distPath : paths.tmp))
     .pipe(
       gulpif(isDev,
         removeEmptyLines({ removeComments: true })), // 清除空白行
       htmlmin(options))
-    .pipe(gulp.dest(isDev ? paths.dist : paths.tmp))
+    .pipe(gulp.dest(isDev ? distPath : paths.tmp))
 })
 
 gulp.task('asyncWIFI:all', cb => {
-  APICloud.syncWifi({ projectPath: paths.dist, syncAll: true })
+  APICloud.syncWifi({ projectPath: distPath, syncAll: true })
   cb()
 })
 gulp.task('asyncWIFI', cb => {
-  APICloud.syncWifi({ projectPath: paths.dist, syncAll: false })
+  APICloud.syncWifi({ projectPath: distPath, syncAll: false })
   cb()
 })
 gulp.task('stopWIFI', cb => {
@@ -292,7 +294,7 @@ gulp.task('startWIFI', cb => {
       console.log(`将在 ${time} 秒后进行全量wifi同步！`)
       if (--time > -1) return timer(time)
       console.log(`全量wifi同步开始...`)
-      APICloud.syncWifi({ projectPath: paths.dist, syncAll: true })
+      APICloud.syncWifi({ projectPath: distPath, syncAll: true })
       console.log(isDev ? `全量wifi同步指令已执行！` : `全量wifi同步指令已执行，同步完毕后请按 ctrl+c 结束命令行！`)
     }, 1000)
   }
