@@ -304,7 +304,7 @@ gulp.task('startWIFI', cb => {
 
 gulp.task('build', gulp.series('clean:all', ['img', 'copyxml', 'copysyncignore', 'copyres', 'csscompress', 'less', 'minifyjs'], ['html', 'pug'], 'inlinesource', 'startWIFI'))
 
-gulp.task('buildt', gulp.series(['img', 'copyxml', 'copysyncignore', 'copyres', 'csscompress', 'less', 'minifyjs', 'html', 'pug']))
+gulp.task('buildt', gulp.series('clean:all', ['img', 'copyxml', 'copysyncignore', 'copyres', 'csscompress', 'less', 'minifyjs', 'html', 'pug']))
 
 gulp.task('copyfile', gulp.parallel('copycss', 'copyjs', 'copymap'))
 
