@@ -52,18 +52,6 @@ const files = {
   distRes: paths.src + '/res/*'
 }
 
-const AUTOPREFIXER_BROWSERS = [
-  '> 0.1%',
-  'not ie > 0',
-  'not firefox > 0',
-  'not UCAndroid > 0',
-  'not Edge > 0',
-  'not ie_mob > 0',
-  'not QQAndroid > 0',
-  'not FirefoxAndroid > 0',
-  'not Baidu > 0'
-]
-
 gulp.task('clean:all', function(cb) {
   del([paths.tmp, path.join(distPath, '/html'), path.join(distPath, '/css'), path.join(distPath, '/script'), path.join(distPath, '/image'), path.join(distPath, '/res')], { force: true })
   cb()
@@ -111,7 +99,7 @@ gulp.task('csscompress', function() {
     .src(files.srcCSS)
     .pipe(changed((isDev ? distPath : paths.tmp) + '/css'))
     .pipe(gulpif(isDev, sourcemaps.init()))
-    .pipe(postcss([ autoprefixer({ browsers: AUTOPREFIXER_BROWSERS }) ]))
+    .pipe(postcss([ autoprefixer() ]))
     .pipe(gulpif(!isDev, csso())) // 压缩CSS文件
     .pipe(gulpif(isDev, sourcemaps.write('.')))
     .pipe(gulp.dest((isDev ? distPath : paths.tmp) + '/css'))
@@ -124,7 +112,7 @@ gulp.task('less', function() {
     .pipe(changed((isDev ? distPath : paths.tmp) + '/css'))
     .pipe(gulpif(isDev, sourcemaps.init()))
     .pipe(less()) // 压缩CSS文件
-    .pipe(postcss([ autoprefixer({ browsers: AUTOPREFIXER_BROWSERS }) ]))
+    .pipe(postcss([ autoprefixer() ]))
     .pipe(gulpif(!isDev, csso())) // 压缩CSS文件
     .pipe(gulpif(isDev, sourcemaps.write('.')))
     .pipe(gulp.dest((isDev ? distPath : paths.tmp) + '/css'))
