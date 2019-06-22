@@ -2,7 +2,13 @@ const gulp = require('gulp')
 const inlinesource = require('gulp-inline-source')
 const htmlmin = require('gulp-htmlmin') // html压缩组件
 const removeEmptyLines = require('gulp-remove-empty-lines') // 清除空白行，参考
-const babel = require('gulp-babel') // 编译se6
+
+// const babel = require('gulp-babel') // 编译se6
+const rollup = require('gulp-better-rollup')
+const babel = require('rollup-plugin-babel')
+const resolve = require('rollup-plugin-node-resolve')
+const commonjs = require('rollup-plugin-commonjs')
+
 const uglify = require('gulp-uglify') // js文件压缩
 const csso = require('gulp-csso') // CSS压缩
 const imagemin = require('gulp-imagemin') // 图片压缩
@@ -84,7 +90,8 @@ gulp.task('minifyjs', function() {
     gulp
       .src(files.srcJS)
       .pipe(changed((isDev ? distPath : paths.tmp) + '/script'))
-      .pipe(babel({ presets: ['env'] })) // 编译se6
+      // .pipe(babel({ presets: ['@babel/preset-env'] })) // 编译se6
+      .pipe(rollup({ plugins: [babel(), resolve(), commonjs()] }, 'umd')) // 编译se6
       .pipe(gulpif(!isDev, uglify({
         output: {
           // comments: 'some'

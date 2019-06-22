@@ -1,6 +1,6 @@
 {
   "name": "apicloud-gulp-template",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "",
   "main": "gulpfile.js",
   "scripts": {
@@ -20,22 +20,14 @@
     "url": "https://github.com/lyswhut/apicloud-gulp-template/issues"
   },
   "browserslist": [
-    "> 0.1%",
-    "not ie > 0",
-    "not firefox > 0",
-    "not UCAndroid > 0",
-    "not Edge > 0",
-    "not ie_mob > 0",
-    "not QQAndroid > 0",
-    "not FirefoxAndroid > 0",
-    "not Baidu > 0"
+    "Chrome >= 39"
   ],
   "homepage": "https://github.com/lyswhut/apicloud-gulp-template#readme",
   "devDependencies": {
+    "@babel/core": "^7.4.5",
+    "@babel/preset-env": "^7.4.5",
     "apicloud-tools-core": "^0.1.0",
     "autoprefixer": "^9.6.0",
-    "babel-core": "^6.26.3",
-    "babel-preset-env": "^1.7.0",
     "cross-env": "^5.2.0",
     "del": "^3.0.0",
     "eslint": "^5.16.0",
@@ -46,7 +38,7 @@
     "eslint-plugin-promise": "^4.1.1",
     "eslint-plugin-standard": "^4.0.0",
     "gulp": "^4.0.2",
-    "gulp-babel": "^7.0.1",
+    "gulp-better-rollup": "^4.0.1",
     "gulp-cache": "^1.1.2",
     "gulp-changed": "^3.2.0",
     "gulp-clean-css": "^4.2.0",
@@ -60,6 +52,10 @@
     "gulp-pug": "^4.0.1",
     "gulp-remove-empty-lines": "^0.1.0",
     "gulp-sourcemaps": "^2.6.5",
-    "gulp-uglify": "^3.0.2"
+    "gulp-uglify": "^3.0.2",
+    "rollup": "^1.16.2",
+    "rollup-plugin-babel": "^4.3.3",
+    "rollup-plugin-commonjs": "^10.0.0",
+    "rollup-plugin-node-resolve": "^5.0.4"
   }
 }

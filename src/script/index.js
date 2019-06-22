@@ -1,3 +1,7 @@
+import { a } from './utils/tools'
+
+console.log(a(5))
+
 window.apiready = function() {
   // 输出Log，Log将显示在APICloud Studio控制台
   console.log('Hello World! Hello APICloud!')

@@ -1,3 +1,5 @@
+const { a } = require('./utils/tools2')
+console.log(a())
 window.apiready = function() {
   const ver = window.api.version
   const sType = window.api.systemType
