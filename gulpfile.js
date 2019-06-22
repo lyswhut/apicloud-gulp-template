@@ -23,12 +23,12 @@ const isDev = process.env.NODE_ENV !== 'production'
 
 const { paths, apicloudConfig } = require('./config')
 
-const distPath = isDev ? paths.devDist : paths.prodDist
+const distPath = path.isAbsolute(paths.devDist) ? paths.devDist : path.join(__dirname, isDev ? paths.devDist : paths.prodDist)
 
 console.log(`=============================
 src path: ${path.isAbsolute(paths.src) ? paths.src : path.join(__dirname, paths.src)}
 tmp path: ${path.isAbsolute(paths.tmp) ? paths.tmp : path.join(__dirname, paths.tmp)}
-dist path: ${path.isAbsolute(distPath) ? distPath : path.join(__dirname, distPath)}
+dist path: ${distPath}
 =============================
 `)
 
