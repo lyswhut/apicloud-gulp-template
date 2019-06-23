@@ -13,6 +13,6 @@ html(lang="en")
     footer
       | Copyright &copy;
       span#year
-
-    script(type="text/javascript" src="./script/vendors/api.js")
-    script(src="./script/index.js")
+  script.
+    var isDev = !{isDev};
+  script(src="./script/index.js")

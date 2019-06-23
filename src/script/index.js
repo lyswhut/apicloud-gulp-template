@@ -1,6 +1,4 @@
-import { a } from './utils/tools'
-
-console.log(a(5))
+import './vendors/api'
 
 window.apiready = function() {
   // 输出Log，Log将显示在APICloud Studio控制台

@@ -10,6 +10,7 @@
     "space-before-function-paren": ["error", "never"],
     "no-var": "error",
     "no-fallthrough": "off",
-    "handle-callback-err": "off"
+    "handle-callback-err": "off",
+    "eqeqeq": "off"
   }
 }

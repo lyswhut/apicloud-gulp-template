@@ -9,6 +9,7 @@ html(lang="en")
     block styles
   body
     block body
-    script(type="text/javascript" src="../script/vendors/api.js")
-    block scripts
-    
+  script.
+    var isDev = !{isDev};
+  block scripts
+

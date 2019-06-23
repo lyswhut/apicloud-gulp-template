@@ -1,3 +1,4 @@
+const fs = require('fs')
 const gulp = require('gulp')
 const inlinesource = require('gulp-inline-source')
 const htmlmin = require('gulp-htmlmin') // html压缩组件
@@ -30,6 +31,8 @@ const isDev = process.env.NODE_ENV !== 'production'
 const { paths, apicloudConfig } = require('./config')
 
 let distPath = isDev ? paths.devDist : paths.prodDist
+const srcPath = path.isAbsolute(paths.src) ? paths.src : path.join(__dirname, paths.src)
+// const tmpPath = path.isAbsolute(paths.tmp) ? paths.tmp : path.join(__dirname, paths.tmp)
 distPath = path.isAbsolute(distPath) ? distPath : path.join(__dirname, distPath)
 
 console.log(`=============================
@@ -46,6 +49,7 @@ const files = {
   srcLess: [paths.src + '/css/**/*.less', '!' + paths.src + '/common/**/*'],
   srcJS: paths.src + '/script/**/*.js',
   srcImg: paths.src + '/image/**/*.{png,jpg,gif,ico,svg}',
+  srcFont: paths.src + '/fonts/**/*.{eot,ttf,woff,woff2}',
   // srcSvg: paths.src + '/image/**/*.svg',
   srcRes: paths.src + '/res/*',
   tmpHTML: [paths.tmp + '/**/*.html'],
@@ -56,11 +60,20 @@ const files = {
   distCSS: distPath + '/**/*.css',
   distJS: distPath + '/**/*.js',
   distImg: distPath + '/image/*.{png,jpg,gif,ico,svg}',
+  distFont: distPath + '/fonts/**/*.{eot|ttf|woff|woff2}',
   distRes: paths.src + '/res/*'
 }
 
 gulp.task('clean:all', function(cb) {
-  del([paths.tmp, path.join(distPath, '/html'), path.join(distPath, '/css'), path.join(distPath, '/script'), path.join(distPath, '/image'), path.join(distPath, '/res')], { force: true })
+  del([
+    paths.tmp,
+    path.join(distPath, '/html'),
+    path.join(distPath, '/css'),
+    path.join(distPath, '/script'),
+    path.join(distPath, '/image'),
+    path.join(distPath, '/fonts'),
+    path.join(distPath, '/res')
+  ], { force: true })
   cb()
 })
 gulp.task('clean:html', function(cb) {
@@ -79,19 +92,121 @@ gulp.task('clean:img', function(cb) {
   del([files.distImg])
   cb()
 })
+gulp.task('clean:font', function(cb) {
+  del([files.distFont])
+  cb()
+})
 gulp.task('clean:res', function(cb) {
   del([files.distRes])
   cb()
 })
+
+global.compareChange = {
+  dependencies: {},
+  cachedFile: new Map(),
+  scriptRootPath: path.join(srcPath, '/script'),
+  regExps: {
+    matchImport: /^\s*(?:import[\s\n]+(?:(?:{[\w\s,\n\r-]+}|[\w\n\r-]+)[\s\n]+from[\s\n]+)?['"][./\w-]+['"]|(?:((?:const|let|var)?[\s\n]+(?:{[\w\s,\n\r-]+}|[\w\n\r-]+)|\w+)[\s\n]+=[\s\n]+)?require\(['"][./\w-]+['"]\))\s*;{0,1}\s*$/gm,
+    matchPath: /^[\s\n\r\w-,{}]*(?:['"]([./\w-]+)['"]|require\(['"]([./\w-]+)['"]\))\s*;{0,1}\s*$/,
+    matchExt: /(\.js)$/
+  },
+  addDependencies(sourceFile) {
+    let matchResult = sourceFile.contents.toString().match(this.regExps.matchImport)
+    let tempPath
+    if (matchResult) {
+      for (const item of matchResult) {
+        tempPath = item.replace(this.regExps.matchPath, '$1')
+        if (!tempPath.includes('./')) continue
+        let filePath = path.join(path.dirname(sourceFile.path), tempPath).replace(this.regExps.matchExt, '')
+        if (!fs.existsSync(filePath + '.js')) filePath = path.join(filePath, 'index')
+        if (!this.dependencies[filePath]) this.dependencies[filePath] = new Set()
+        global.compareChange.dependencies[filePath].add(sourceFile.path)
+      }
+    }
+  },
+  updateDependencies(sourceFile) {
+    let filePath = sourceFile.path
+
+    // remove all dependencies
+    let temp
+    for (const key of Object.keys(this.dependencies)) {
+      temp = this.dependencies[key]
+      if (temp.has(filePath)) temp.delete(filePath)
+    }
+
+    this.addDependencies(sourceFile)
+  },
+
+  updateDependenciesFile(sourceFile, stream) {
+    let dependencies = this.dependencies[sourceFile.path.replace(this.regExps.matchExt, '')]
+    // console.log(stream)
+    if (dependencies) {
+      let matchedPath = new Set()
+      for (const _path of dependencies) {
+        this.handleUpdateDependenciesFile(_path, stream, matchedPath)
+      }
+    }
+  },
+
+  handleUpdateDependenciesFile(filePath, stream, matchedPath) {
+    if (matchedPath.has(filePath)) return
+    matchedPath.add(filePath)
+    let _filePath = filePath.replace(this.regExps.matchExt, '')
+    let dependencies = this.dependencies[_filePath]
+    if (dependencies && dependencies.size) {
+      for (const _path of dependencies) {
+        this.handleUpdateDependenciesFile(_path, stream, matchedPath)
+      }
+    } else {
+      if (path.dirname(filePath) != this.scriptRootPath) return
+      let file = this.cachedFile.get(filePath)
+      if (file) {
+        file.contents = fs.readFileSync(filePath)
+        stream.push(file.clone())
+        console.log('Update dependencie: ' + filePath)
+      }
+    }
+  },
+
+  async compareDependencies(stream, sourceFile, targetPath) {
+    let targetStat
+
+    if (!global.compareChange.cachedFile.has(sourceFile.path)) {
+      global.compareChange.addDependencies(sourceFile)
+      global.compareChange.cachedFile.set(sourceFile.path, sourceFile.clone())
+    }
+
+    targetStat = fs.statSync(targetPath)
+
+    if (sourceFile.stat && sourceFile.stat.mtimeMs > targetStat.mtimeMs) {
+      global.compareChange.cachedFile.set(sourceFile.path, sourceFile.clone())
+      global.compareChange.updateDependencies(sourceFile)
+
+      stream.push(sourceFile)
+      global.compareChange.updateDependenciesFile(sourceFile, stream)
+    }
+  }
+}
 
 // 处理js
 gulp.task('minifyjs', function() {
   return (
     gulp
       .src(files.srcJS)
-      .pipe(changed((isDev ? distPath : paths.tmp) + '/script'))
+      .pipe(changed((isDev ? distPath : paths.tmp) + '/script', {
+        hasChanged: global.compareChange.compareDependencies
+      }))
       // .pipe(babel({ presets: ['@babel/preset-env'] })) // 编译se6
-      .pipe(rollup({ plugins: [babel(), resolve(), commonjs()] }, 'umd')) // 编译se6
+      .pipe(rollup({
+        plugins: [babel(), resolve(), commonjs()],
+
+        // ignore THIS_IS_UNDEFINED warning
+        // see https://github.com/rollup/rollup/issues/1518
+        onwarn(warning, warn) {
+          if (warning.code === 'THIS_IS_UNDEFINED') return
+          warn(warning) // this requires Rollup 0.46
+        }
+      }, 'umd')) // 编译se6
       .pipe(gulpif(!isDev, uglify({
         output: {
           // comments: 'some'
@@ -148,6 +263,14 @@ gulp.task('copyimg', function() {
     .src(files.srcImg)
     .pipe(changed(distPath + '/image'))
     .pipe(gulp.dest(distPath + '/image')) // 输出
+})
+
+// 拷贝 font
+gulp.task('copyfont', function() {
+  return gulp
+    .src(files.srcFont)
+    .pipe(changed(distPath + '/fonts'))
+    .pipe(gulp.dest(distPath + '/fonts')) // 输出
 })
 
 // 拷贝xml
@@ -224,7 +347,10 @@ gulp.task('pug', function() {
     .src(files.srcPug)
     .pipe(changed(isDev ? distPath : paths.tmp))
     .pipe(pug({
-      pretty: isDev
+      pretty: isDev,
+      data: {
+        isDev
+      }
       // Your options in here.
     }))
     .pipe(gulp.dest(isDev ? distPath : paths.tmp))
@@ -298,9 +424,9 @@ gulp.task('startWIFI', cb => {
   cb()
 })
 
-gulp.task('build', gulp.series('clean:all', ['img', 'copyxml', 'copysyncignore', 'copyres', 'csscompress', 'less', 'minifyjs'], ['html', 'pug'], 'inlinesource', 'startWIFI'))
+gulp.task('build', gulp.series('clean:all', ['img', 'copyfont', 'copyxml', 'copysyncignore', 'copyres', 'csscompress', 'less', 'minifyjs'], ['html', 'pug'], 'inlinesource', 'startWIFI'))
 
-gulp.task('buildt', gulp.series('clean:all', ['img', 'copyxml', 'copysyncignore', 'copyres', 'csscompress', 'less', 'minifyjs', 'html', 'pug']))
+gulp.task('buildt', gulp.series('clean:all', ['img', 'copyfont', 'copyxml', 'copysyncignore', 'copyres', 'csscompress', 'less', 'minifyjs', 'html', 'pug']))
 
 gulp.task('copyfile', gulp.parallel('copycss', 'copyjs', 'copymap'))
 
@@ -325,6 +451,7 @@ gulp.task('watch', function() {
 
   // gulp.watch(files.src + '/script/vendor/*.js', ['clean:vendorjs', 'copyjs']);
   gulp.watch(files.srcImg, gulp.series('img', 'asyncWIFI'))
+  gulp.watch(files.srcFont, gulp.series('copyfont', 'asyncWIFI'))
   gulp.watch(files.srcRes, gulp.series('copyres', 'asyncWIFI'))
   gulp.watch(files.src + '/config.xml', gulp.series('copyxml', 'asyncWIFI'))
   gulp.watch(files.src + '/.syncignore', gulp.series('copysyncignore'))
