@@ -60,7 +60,7 @@ const files = {
   distCSS: distPath + '/**/*.css',
   distJS: distPath + '/**/*.js',
   distImg: distPath + '/image/*.{png,jpg,gif,ico,svg}',
-  distFont: distPath + '/fonts/**/*.{eot|ttf|woff|woff2}',
+  distFont: distPath + '/fonts/**/*.{eot,ttf,woff,woff2}',
   distRes: paths.src + '/res/*'
 }
 
