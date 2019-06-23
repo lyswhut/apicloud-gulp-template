@@ -190,30 +190,33 @@ global.compareChange = {
 
 // 处理js
 gulp.task('minifyjs', function() {
-  return (
-    gulp
-      .src(files.srcJS)
-      .pipe(gulpif(isDev, changed(distPath + '/script', {
-        hasChanged: global.compareChange.compareDependencies
-      })))
-      // .pipe(babel({ presets: ['@babel/preset-env'] })) // 编译se6
-      .pipe(rollup({
-        plugins: [babel(), resolve(), commonjs()],
+  return gulp.src(files.srcJS)
+    .pipe(gulpif(isDev, changed(distPath + '/script', {
+      hasChanged: global.compareChange.compareDependencies
+    })))
+  // .pipe(babel({ presets: ['@babel/preset-env'] })) // 编译se6
+    .pipe(rollup({
+      plugins: [babel({
+        exclude: [
+          'node_modules/**',
+          'src/script/vendors/**'
+        ]
+      }), resolve(), commonjs()],
 
-        // ignore THIS_IS_UNDEFINED warning
-        // see https://github.com/rollup/rollup/issues/1518
-        onwarn(warning, warn) {
-          if (warning.code === 'THIS_IS_UNDEFINED') return
-          warn(warning) // this requires Rollup 0.46
-        }
-      }, 'umd')) // 编译se6
-      .pipe(gulpif(!isDev, uglify({
-        output: {
-          // comments: 'some'
-        }
-      }))) // 压缩
-      .pipe(gulp.dest((isDev ? distPath : paths.tmp) + '/script'))
-  ) // 输出
+      // ignore THIS_IS_UNDEFINED warning
+      // see https://github.com/rollup/rollup/issues/1518
+      onwarn(warning, warn) {
+        if (warning.code === 'THIS_IS_UNDEFINED') return
+        warn(warning) // this requires Rollup 0.46
+      }
+    }, 'umd')) // 编译se6
+    .pipe(gulpif(!isDev, uglify({
+      output: {
+        // comments: 'some'
+      }
+    }))) // 压缩
+    .pipe(gulp.dest((isDev ? distPath : paths.tmp) + '/script'))
+  // 输出
 })
 
 // 处理CSS

@@ -28,6 +28,7 @@
     "@babel/preset-env": "^7.4.5",
     "apicloud-tools-core": "^0.1.0",
     "autoprefixer": "^9.6.0",
+    "core-js": "^3.1.4",
     "cross-env": "^5.2.0",
     "del": "^3.0.0",
     "eslint": "^5.16.0",

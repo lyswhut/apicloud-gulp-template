@@ -6,6 +6,8 @@
 
 本脚手架集成了`rollup`，JavaScript文件间可用ES6的`import/export`语法或CommonJS的`require/exports`语法对模块添加依赖，被依赖的模块将会自动内联进所导入模块的文件中，最终再被内联进HTML文件中。So，对于已导入的模块**不需要**再在HTML文件中添加`script`标签引用。
 
+由于集成了babel，所以可以使用绝大部分的ES6语法，并且支持ES7的`async/await`语法，当使用这些语法时打包工具会自动导入相应的垫片。**注意：**脚手架默认**没有开启**垫片导入，若需要可解除`.babelrc`文件内的注释开启语法垫片导入。
+
 对于模块依赖的问题，你可能要参考<https://github.com/rollup/rollup-plugin-commonjs#custom-named-exports>。
 
 本脚手架集成了 APICloud 的wifi同步插件，处在开发模式时会实时监视`src`目录下的文件变动并动态编译到目标目录，然后执行WIFI同步功能，从而实现改完文件APP自动刷新。
