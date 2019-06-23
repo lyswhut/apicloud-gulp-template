@@ -193,9 +193,9 @@ gulp.task('minifyjs', function() {
   return (
     gulp
       .src(files.srcJS)
-      .pipe(changed((isDev ? distPath : paths.tmp) + '/script', {
+      .pipe(gulpif(isDev, changed(distPath + '/script', {
         hasChanged: global.compareChange.compareDependencies
-      }))
+      })))
       // .pipe(babel({ presets: ['@babel/preset-env'] })) // 编译se6
       .pipe(rollup({
         plugins: [babel(), resolve(), commonjs()],
