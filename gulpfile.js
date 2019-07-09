@@ -1,8 +1,7 @@
 const fs = require('fs')
 const gulp = require('gulp')
-const inlinesource = require('gulp-inline-source')
-const htmlmin = require('gulp-htmlmin') // html压缩组件
-const removeEmptyLines = require('gulp-remove-empty-lines') // 清除空白行，参考
+const inlinesource = require('gulp-inline-source') // 内联插件
+const htmlmin = require('gulp-htmlmin') // html压缩插件
 
 // const babel = require('gulp-babel') // 编译se6
 const rollup = require('gulp-better-rollup')
@@ -317,9 +316,27 @@ gulp.task('copyres', function() {
     .pipe(changed(distPath))
     .pipe(gulp.dest(distPath)) // 输出
 })
+// 拷贝html文件
+gulp.task('html', function() {
+  return gulp
+    .src(files.srcHTML)
+    .pipe(changed(isDev ? distPath : paths.tmp))
+    .pipe(gulp.dest(isDev ? distPath : paths.tmp))
+})
 
+// 内联代码处理
 gulp.task('inlinesource', function() {
-  let options = {
+  let htmlminOptions = {
+    removeComments: true, // 清除HTML注释
+    collapseWhitespace: true, // 压缩HTML
+    collapseBooleanAttributes: true, // 省略布尔属性的值 <input checked="true"/> ==> <input />
+    removeEmptyAttributes: true, // 删除所有空格作属性值 <input id="" /> ==> <input />
+    removeScriptTypeAttributes: true, // 删除<script>的type="text/javascript"
+    removeStyleLinkTypeAttributes: true, // 删除<style>和<link>的type="text/css"
+    // minifyJS: true,//压缩页面JS
+    minifyCSS: true // 压缩页面CSS
+  }
+  let inlinesourceOptions = {
     attribute: false,
     compress: false,
     ignore: [ 'img' ]
@@ -339,8 +356,9 @@ gulp.task('inlinesource', function() {
   }
   return gulp
     .src(files.tmpHTML)
-    .pipe(changed(distPath))
-    .pipe(inlinesource(options))
+    // .pipe(changed(distPath))
+    .pipe(htmlmin(htmlminOptions))
+    .pipe(inlinesource(inlinesourceOptions))
     .pipe(gulp.dest(distPath))
 })
 
@@ -356,28 +374,6 @@ gulp.task('pug', function() {
       }
       // Your options in here.
     }))
-    .pipe(gulp.dest(isDev ? distPath : paths.tmp))
-})
-
-// 处理html
-gulp.task('html', function() {
-  let options = {
-    removeComments: true, // 清除HTML注释
-    collapseWhitespace: true, // 压缩HTML
-    collapseBooleanAttributes: true, // 省略布尔属性的值 <input checked="true"/> ==> <input />
-    removeEmptyAttributes: true, // 删除所有空格作属性值 <input id="" /> ==> <input />
-    removeScriptTypeAttributes: true, // 删除<script>的type="text/javascript"
-    removeStyleLinkTypeAttributes: true, // 删除<style>和<link>的type="text/css"
-    // minifyJS: true,//压缩页面JS
-    minifyCSS: true // 压缩页面CSS
-  }
-  return gulp
-    .src(files.srcHTML)
-    .pipe(changed(isDev ? distPath : paths.tmp))
-    .pipe(
-      gulpif(isDev,
-        removeEmptyLines({ removeComments: true })), // 清除空白行
-      htmlmin(options))
     .pipe(gulp.dest(isDev ? distPath : paths.tmp))
 })
 
@@ -427,7 +423,7 @@ gulp.task('startWIFI', cb => {
   cb()
 })
 
-gulp.task('build', gulp.series('clean:all', ['img', 'copyfont', 'copyxml', 'copysyncignore', 'copyres', 'csscompress', 'less', 'minifyjs'], ['html', 'pug'], 'inlinesource', 'startWIFI'))
+gulp.task('build', gulp.series('clean:all', ['img', 'copyfont', 'copyxml', 'copysyncignore', 'copyres', 'csscompress', 'less', 'minifyjs', 'html', 'pug'], 'inlinesource', 'startWIFI'))
 
 gulp.task('buildt', gulp.series('clean:all', ['img', 'copyfont', 'copyxml', 'copysyncignore', 'copyres', 'csscompress', 'less', 'minifyjs', 'html', 'pug']))
 
