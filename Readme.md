@@ -2,7 +2,7 @@
 
 ## 介绍
 
-为了方便开发 APICloud 应用，本脚手架提供了 `less`、`pug`、`ES6` 语法编译支持，同时集成了 `autoprefixer`。并且，在生产环境编译时，会自动把页面引用的所有 `css`、 `js` **压缩**并以**内联**的方式注入到HTML页面中，对于`js`文件，还会对代码进行**摇树优化**，从而提高APP的性能。
+为了方便开发 APICloud 应用，本脚手架提供了 `less`、`pug`、`ejs`、`ES6` 语法编译支持，同时集成了 `autoprefixer`。并且，在生产环境编译时，会自动把页面引用的所有 `css`、 `js` **压缩**并以**内联**的方式注入到HTML页面中，对于`js`文件，还会对代码进行**摇树优化**，从而提高APP的性能。
 
 本脚手架集成了`rollup`，JavaScript文件间可用ES6的`import/export`语法或CommonJS的`require/exports`语法对模块添加依赖，被依赖的模块将会自动内联进所导入模块的文件中，最终再被内联进HTML文件中。So，对于已导入的模块**不需要**再在HTML文件中添加`script`标签引用。
 
@@ -100,7 +100,7 @@ npm run build
 
 # 实用命令
 ## 以main.pug为模板新建名为test.pug的文件及对应css及js文件
-## 会自动识别是.pug或.html文件，less/css也是
+## 会自动识别是.pug/.ejs/.html文件，less/css也是
 ## 若不传目标模板，将以 index 为目标模板
 npm run cv -- test main
 ```
