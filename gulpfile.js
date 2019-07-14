@@ -16,9 +16,11 @@ const del = require('del') // 删除文件
 const changed = require('gulp-changed')
 const path = require('path')
 const pug = require('gulp-pug')
+const ejs = require('gulp-ejs')
 const less = require('gulp-less')
 // const cache = require('gulp-cache')
 const gulpif = require('gulp-if')
+const rename = require('gulp-rename')
 const postcss = require('gulp-postcss')
 const sourcemaps = require('gulp-sourcemaps')
 const autoprefixer = require('autoprefixer')
@@ -44,6 +46,7 @@ dist path: ${distPath}
 const files = {
   srcHTML: paths.src + '/**/*.html',
   srcPug: [paths.src + '/**/*.pug', '!' + paths.src + '/layout/**/*'],
+  srcEjs: [paths.src + '/**/*.ejs', '!' + paths.src + '/layout/**/*'],
   srcCSS: [paths.src + '/css/**/*.css', '!' + paths.src + '/common/**/*'],
   srcLess: [paths.src + '/css/**/*.less', '!' + paths.src + '/common/**/*'],
   srcJS: paths.src + '/script/**/*.js',
@@ -110,7 +113,7 @@ global.compareChange = {
     matchExt: /(\.js)$/
   },
   addDependencies(sourceFile) {
-    let matchResult = sourceFile.contents.toString().match(this.regExps.matchImport)
+    const matchResult = sourceFile.contents.toString().match(this.regExps.matchImport)
     let tempPath
     if (matchResult) {
       for (const item of matchResult) {
@@ -124,7 +127,7 @@ global.compareChange = {
     }
   },
   updateDependencies(sourceFile) {
-    let filePath = sourceFile.path
+    const filePath = sourceFile.path
 
     // remove all dependencies
     let temp
@@ -137,10 +140,10 @@ global.compareChange = {
   },
 
   updateDependenciesFile(sourceFile, stream) {
-    let dependencies = this.dependencies[sourceFile.path.replace(this.regExps.matchExt, '')]
+    const dependencies = this.dependencies[sourceFile.path.replace(this.regExps.matchExt, '')]
     // console.log(stream)
     if (dependencies) {
-      let matchedPath = new Set()
+      const matchedPath = new Set()
       for (const _path of dependencies) {
         this.handleUpdateDependenciesFile(_path, stream, matchedPath)
       }
@@ -150,15 +153,15 @@ global.compareChange = {
   handleUpdateDependenciesFile(filePath, stream, matchedPath) {
     if (matchedPath.has(filePath)) return
     matchedPath.add(filePath)
-    let _filePath = filePath.replace(this.regExps.matchExt, '')
-    let dependencies = this.dependencies[_filePath]
+    const _filePath = filePath.replace(this.regExps.matchExt, '')
+    const dependencies = this.dependencies[_filePath]
     if (dependencies && dependencies.size) {
       for (const _path of dependencies) {
         this.handleUpdateDependenciesFile(_path, stream, matchedPath)
       }
     } else {
       if (path.dirname(filePath) != this.scriptRootPath) return
-      let file = this.cachedFile.get(filePath)
+      const file = this.cachedFile.get(filePath)
       if (file) {
         file.contents = fs.readFileSync(filePath)
         stream.push(file.clone())
@@ -168,14 +171,12 @@ global.compareChange = {
   },
 
   async compareDependencies(stream, sourceFile, targetPath) {
-    let targetStat
-
     if (!global.compareChange.cachedFile.has(sourceFile.path)) {
       global.compareChange.addDependencies(sourceFile)
       global.compareChange.cachedFile.set(sourceFile.path, sourceFile.clone())
     }
 
-    targetStat = fs.statSync(targetPath)
+    const targetStat = fs.statSync(targetPath)
 
     if (sourceFile.stat && sourceFile.stat.mtimeMs > targetStat.mtimeMs) {
       global.compareChange.cachedFile.set(sourceFile.path, sourceFile.clone())
@@ -208,7 +209,10 @@ gulp.task('minifyjs', function() {
         if (warning.code === 'THIS_IS_UNDEFINED') return
         warn(warning) // this requires Rollup 0.46
       }
-    }, 'umd')) // 编译se6
+    }, {
+      format: 'umd',
+      exports: 'named'
+    })) // 编译se6
     .pipe(gulpif(!isDev, uglify({
       output: {
         // comments: 'some'
@@ -224,7 +228,7 @@ gulp.task('csscompress', function() {
     .src(files.srcCSS)
     .pipe(changed((isDev ? distPath : paths.tmp) + '/css'))
     .pipe(gulpif(isDev, sourcemaps.init()))
-    .pipe(postcss([ autoprefixer() ]))
+    .pipe(postcss([autoprefixer()]))
     .pipe(gulpif(!isDev, csso())) // 压缩CSS文件
     .pipe(gulpif(isDev, sourcemaps.write('.')))
     .pipe(gulp.dest((isDev ? distPath : paths.tmp) + '/css'))
@@ -237,7 +241,7 @@ gulp.task('less', function() {
     .pipe(changed((isDev ? distPath : paths.tmp) + '/css'))
     .pipe(gulpif(isDev, sourcemaps.init()))
     .pipe(less()) // 压缩CSS文件
-    .pipe(postcss([ autoprefixer() ]))
+    .pipe(postcss([autoprefixer()]))
     .pipe(gulpif(!isDev, csso())) // 压缩CSS文件
     .pipe(gulpif(isDev, sourcemaps.write('.')))
     .pipe(gulp.dest((isDev ? distPath : paths.tmp) + '/css'))
@@ -326,7 +330,7 @@ gulp.task('html', function() {
 
 // 内联代码处理
 gulp.task('inlinesource', function() {
-  let htmlminOptions = {
+  const htmlminOptions = {
     removeComments: true, // 清除HTML注释
     collapseWhitespace: true, // 压缩HTML
     collapseBooleanAttributes: true, // 省略布尔属性的值 <input checked="true"/> ==> <input />
@@ -336,10 +340,10 @@ gulp.task('inlinesource', function() {
     // minifyJS: true,//压缩页面JS
     minifyCSS: true // 压缩页面CSS
   }
-  let inlinesourceOptions = {
+  const inlinesourceOptions = {
     attribute: false,
     compress: false,
-    ignore: [ 'img' ]
+    ignore: ['img']
     // handlers: (source, context) => {
     //   if (source.fileContent && !source.content) {
     //     switch (source.type) {
@@ -374,6 +378,18 @@ gulp.task('pug', function() {
       }
       // Your options in here.
     }))
+    .pipe(gulp.dest(isDev ? distPath : paths.tmp))
+})
+
+// 处理ejs
+gulp.task('ejs', function() {
+  return gulp
+    .src(files.srcEjs)
+    .pipe(changed(isDev ? distPath : paths.tmp))
+    .pipe(ejs({
+      isDev
+    }))
+    .pipe(rename({ extname: '.html' }))
     .pipe(gulp.dest(isDev ? distPath : paths.tmp))
 })
 
@@ -423,9 +439,9 @@ gulp.task('startWIFI', cb => {
   cb()
 })
 
-gulp.task('build', gulp.series('clean:all', ['img', 'copyfont', 'copyxml', 'copysyncignore', 'copyres', 'csscompress', 'less', 'minifyjs', 'html', 'pug'], 'inlinesource', 'startWIFI'))
+gulp.task('build', gulp.series('clean:all', ['img', 'copyfont', 'copyxml', 'copysyncignore', 'copyres', 'csscompress', 'less', 'minifyjs', 'html', 'pug', 'ejs'], 'inlinesource', 'startWIFI'))
 
-gulp.task('buildt', gulp.series('clean:all', ['img', 'copyfont', 'copyxml', 'copysyncignore', 'copyres', 'csscompress', 'less', 'minifyjs', 'html', 'pug']))
+gulp.task('buildt', gulp.series('clean:all', ['img', 'copyfont', 'copyxml', 'copysyncignore', 'copyres', 'csscompress', 'less', 'minifyjs', 'html', 'pug', 'ejs']))
 
 gulp.task('copyfile', gulp.parallel('copycss', 'copyjs', 'copymap'))
 
@@ -434,6 +450,7 @@ gulp.task('watch', function() {
   gulp.watch(files.srcJS, gulp.series('minifyjs', 'asyncWIFI'))
   gulp.watch(files.srcHTML, gulp.series('html', 'inlinesource', 'asyncWIFI'))
   gulp.watch(paths.src + '/**/*.pug', gulp.series('pug', 'inlinesource', 'asyncWIFI'))
+  gulp.watch(paths.src + '/**/*.ejs', gulp.series('ejs', 'inlinesource', 'asyncWIFI'))
   // gulp.watch(paths.src + '/**/*.css', gulp.series('csscompress', ['html', 'pug'], 'inlinesource'))
   // gulp.watch(paths.src + '/**/*.less', gulp.series('less', ['html', 'pug'], 'inlinesource'))
   gulp.watch(paths.src + '/**/*.css', gulp.series('csscompress', 'asyncWIFI'))

@@ -1,7 +1,7 @@
 {
   "extends": "standard",
   "plugins": [
-    "html"
+    "html",
   ],
   "rules": {
     "no-new": "off",
@@ -12,5 +12,5 @@
     "no-fallthrough": "off",
     "handle-callback-err": "off",
     "eqeqeq": "off"
-  }
+  },
 }

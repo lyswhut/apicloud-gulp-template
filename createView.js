@@ -16,18 +16,21 @@ if (!templateName) {
 const findFile = fileName => {
   const find = dirArr => {
     for (let i = 0, len = dirArr.length; i < len; i++) {
-      let d = dirArr[i]
+      const d = dirArr[i]
       if (fs.statSync(path.join(dir, d)).isDirectory()) continue
-      if (d === fileName + '.pug') {
-        return path.join(dir, d)
-      } else if (d === fileName + '.html') {
-        return path.join(dir, d)
-      } else continue
+      switch (d) {
+        case fileName + '.pug':
+        case fileName + '.ejs':
+        case fileName + '.html':
+          return path.join(dir, d)
+        default:
+          continue
+      }
     }
     return null
   }
   let dir = jp()
-  let filePath = find(fs.readdirSync(dir))
+  const filePath = find(fs.readdirSync(dir))
   if (filePath) return filePath
   dir = jp('html')
   return find(fs.readdirSync(dir))
@@ -53,7 +56,7 @@ const createCSS = (newFileName, templateName) => {
   process.exit(0)
 }
 const createJS = (newFileName, templateName) => {
-  let filePath = jp(jsDir, `${templateName}.js`)
+  const filePath = jp(jsDir, `${templateName}.js`)
   if (fs.existsSync(filePath)) {
     const targetPath = path.join(path.dirname(filePath), newFileName + path.extname(filePath))
     fs.copyFileSync(filePath, targetPath, fs.constants.COPYFILE_EXCL)
