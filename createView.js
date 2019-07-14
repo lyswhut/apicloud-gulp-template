@@ -52,8 +52,8 @@ const createCSS = (newFileName, templateName) => {
     fs.copyFileSync(filePath, targetPath, fs.constants.COPYFILE_EXCL)
     return targetPath
   }
-  console.log('找不到目标css文件：' + fileName)
-  process.exit(0)
+  console.log('找不到目标css文件：' + jp(cssDir, `${templateName}.(css|less)`))
+  // process.exit(0)
 }
 const createJS = (newFileName, templateName) => {
   const filePath = jp(jsDir, `${templateName}.js`)
@@ -63,7 +63,7 @@ const createJS = (newFileName, templateName) => {
     return targetPath
   }
   console.log('找不到目标js文件：' + filePath)
-  process.exit(0)
+  // process.exit(0)
 }
 
 const templatePath = findFile(templateName)
@@ -73,9 +73,13 @@ if (!templatePath) {
 }
 
 try {
-  console.log('创建：', createHTML(fileName, templateName, templatePath))
-  console.log('创建：', createCSS(fileName, templateName))
-  console.log('创建：', createJS(fileName, templateName), '\n')
+  const htmlPath = createHTML(fileName, templateName, templatePath)
+  if (htmlPath) console.log('创建：', htmlPath)
+  const cssPath = createCSS(fileName, templateName)
+  if (cssPath) console.log('创建：', cssPath)
+  const jsPath = createJS(fileName, templateName)
+  if (jsPath) console.log('创建：', jsPath)
+  console.log('\n')
   console.log(fileName, '创建成功~')
 } catch (err) {
   console.log('发生错误：', err)
