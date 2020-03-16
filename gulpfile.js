@@ -430,9 +430,9 @@ gulp.task('startWIFI', cb => {
     setTimeout(() => {
       console.log(`将在 ${time} 秒后进行全量wifi同步！`)
       if (--time > -1) return timer(time)
-      console.log(`全量wifi同步开始...`)
+      console.log('全量wifi同步开始...')
       APICloud.syncWifi({ projectPath: distPath, syncAll: true })
-      console.log(isDev ? `全量wifi同步指令已执行！` : `全量wifi同步指令已执行，同步完毕后请按 ctrl+c 结束命令行！`)
+      console.log(isDev ? '全量wifi同步指令已执行！' : '全量wifi同步指令已执行，同步完毕后请按 ctrl+c 结束命令行！')
     }, 1000)
   }
   timer(apicloudConfig.syncTime)
